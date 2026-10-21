@@ -14,7 +14,7 @@ public static class AuthenticationEndpoints
 {
     public static IServiceCollection AddPlatformJwt(this IServiceCollection services, IConfiguration config)
     {
-        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options=>
+        services.AddAuthentication().AddJwtBearer(JwtBearerDefaults.AuthenticationScheme,options=>
         {
             var jwt=config.GetSection("Jwt").Get<JwtOptions>() ?? throw new InvalidOperationException("JWT configuration required.");
             var signingKey=jwt.SigningKey;
@@ -55,7 +55,7 @@ public static class AuthenticationEndpoints
                 }
             };
         });
-        services.AddAuthorization();
+        services.AddAuthorization(options=>options.DefaultPolicy=new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme).RequireAuthenticatedUser().Build());
         services.AddRateLimiter(options=>
         {
             options.RejectionStatusCode=429;
