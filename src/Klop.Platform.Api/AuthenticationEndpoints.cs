@@ -14,13 +14,14 @@ public static class AuthenticationEndpoints
 {
     public static IServiceCollection AddPlatformJwt(this IServiceCollection services, IConfiguration config)
     {
-        var jwt=config.GetSection("Jwt").Get<JwtOptions>() ?? throw new InvalidOperationException("JWT configuration required.");
-        var signingKey=jwt.SigningKey;
-        if (string.IsNullOrWhiteSpace(jwt.Issuer)||string.IsNullOrWhiteSpace(jwt.Audience)||
-            string.IsNullOrWhiteSpace(signingKey)||Encoding.UTF8.GetByteCount(signingKey)<32)
-            throw new InvalidOperationException("Invalid JWT configuration.");
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options=>
         {
+            var jwt=config.GetSection("Jwt").Get<JwtOptions>() ?? throw new InvalidOperationException("JWT configuration required.");
+            var signingKey=jwt.SigningKey;
+            if(string.IsNullOrWhiteSpace(jwt.Issuer)||string.IsNullOrWhiteSpace(jwt.Audience)||
+               string.IsNullOrWhiteSpace(signingKey)||Encoding.UTF8.GetByteCount(signingKey)<32||
+               jwt.AccessTokenMinutes is <1 or >60)
+               throw new InvalidOperationException("Invalid JWT configuration.");
             options.MapInboundClaims=false;
             options.TokenValidationParameters=new TokenValidationParameters
             {
