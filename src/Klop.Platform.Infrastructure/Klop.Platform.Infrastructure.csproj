@@ -1,0 +1,1 @@
+<Project Sdk="Microsoft.NET.Sdk"><ItemGroup><ProjectReference Include="../Klop.Platform.Application/Klop.Platform.Application.csproj" /><ProjectReference Include="../Klop.Platform.Domain/Klop.Platform.Domain.csproj" /><FrameworkReference Include="Microsoft.AspNetCore.App" /></ItemGroup></Project>
