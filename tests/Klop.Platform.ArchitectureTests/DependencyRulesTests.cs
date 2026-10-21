@@ -1,3 +1,4 @@
+using Klop.Platform.Application.Abstractions;
 using Xunit;
 
 namespace Klop.Platform.ArchitectureTests;
@@ -5,9 +6,16 @@ namespace Klop.Platform.ArchitectureTests;
 public sealed class DependencyRulesTests
 {
     [Fact]
-    public void Domain_HasNoProjectReferences()
+    public void Domain_DoesNotDependOnOuterLayers()
     {
-        var names = typeof(Klop.Platform.Application.Abstractions.ICurrentClock).Assembly.GetReferencedAssemblies();
-        Assert.DoesNotContain(names, assembly => assembly.Name == "Klop.Platform.Api");
+        var references = typeof(Klop.Platform.Domain.DomainAssemblyMarker).Assembly.GetReferencedAssemblies();
+        Assert.DoesNotContain(references, x => x.Name is "Klop.Platform.Application" or "Klop.Platform.Infrastructure" or "Klop.Platform.Api");
+    }
+
+    [Fact]
+    public void Application_DoesNotDependOnInfrastructureOrApi()
+    {
+        var references = typeof(ICurrentClock).Assembly.GetReferencedAssemblies();
+        Assert.DoesNotContain(references, x => x.Name is "Klop.Platform.Infrastructure" or "Klop.Platform.Api");
     }
 }
