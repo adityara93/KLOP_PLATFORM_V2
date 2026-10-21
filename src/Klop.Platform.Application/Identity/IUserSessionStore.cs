@@ -10,4 +10,4 @@ public interface IUserSessionStore
 
 public sealed record NewUserSession(Guid SessionId, long UserId, DateTimeOffset SessionExpiresAt, Guid TokenFamilyId, byte[] RefreshTokenHash, DateTimeOffset RefreshTokenExpiresAt, string? IpAddress, string? UserAgent);
 public enum RefreshRotationStatus { Success, Invalid, Replayed }
-public sealed record RefreshRotationResult(RefreshRotationStatus Status, Guid? SessionId, long? UserId);
+public sealed record RefreshRotationResult(RefreshRotationStatus Status, Guid? SessionId, long? UserId, DateTimeOffset? RefreshTokenExpiresAt = null);

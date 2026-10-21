@@ -121,7 +121,7 @@ OR u.Scope='TENANT' AND u.TenantId IS NOT NULL AND t.IsActive=1);",db);
         var scope=rd.GetString(1);
         await rd.DisposeAsync();
         var access=issuer.Issue(new AccessTokenPrincipal(result.UserId.Value,tenant,scope,result.SessionId.Value));
-        return new AuthenticationResult(access.Token,access.ExpiresAt,replacement.Token,now.Add(SessionLifetime),result.SessionId.Value);
+        return new AuthenticationResult(access.Token,access.ExpiresAt,replacement.Token,result.RefreshTokenExpiresAt ?? now.Add(SessionLifetime),result.SessionId.Value);
     }
 
     public async Task<bool> IsSessionActiveAsync(long userId,Guid sessionId,string scope,int? tenant,CancellationToken ct)
