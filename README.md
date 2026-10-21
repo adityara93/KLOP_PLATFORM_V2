@@ -1,5 +1,7 @@
 # KLOP_PLATFORM_V2
 
+New Architecture PLATFORM
+
 New ASP.NET Core Clean Architecture foundation for KLOP Platform V2. V2-01 only; independent of KLOP Platform V1.
 
 ## Requirements
