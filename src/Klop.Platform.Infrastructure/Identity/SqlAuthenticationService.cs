@@ -117,7 +117,7 @@ OR u.Scope='TENANT' AND u.TenantId IS NOT NULL AND t.IsActive=1);",db);
         cmd.Parameters.Add("@now",SqlDbType.DateTime2).Value=now.UtcDateTime;
         await using var rd=await cmd.ExecuteReaderAsync(CommandBehavior.SingleRow,ct);
         if (!await rd.ReadAsync(ct)) { await rd.DisposeAsync(); await store.RevokeAsync(result.SessionId.Value,now,ct); return null; }
-        var tenant=rd.IsDBNull(0)?null:rd.GetInt32(0);
+        int? tenant=rd.IsDBNull(0)?null:rd.GetInt32(0);
         var scope=rd.GetString(1);
         await rd.DisposeAsync();
         var access=issuer.Issue(new AccessTokenPrincipal(result.UserId.Value,tenant,scope,result.SessionId.Value));
