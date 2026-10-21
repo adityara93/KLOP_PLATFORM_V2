@@ -11,7 +11,10 @@ public sealed class V202InitialSchema : Migration
     {
         // Baseline schema is maintained as a single reviewed DDL artifact.
         // EF Core migration executes the same DDL inside the migration transaction.
-        migrationBuilder.Sql(SqlScript.Value, suppressTransaction: true);
+        var ddl = SqlScript.Value
+            .Replace("SET XACT_ABORT ON;\\nBEGIN TRANSACTION;\\n", string.Empty, StringComparison.Ordinal)
+            .Replace("COMMIT TRANSACTION;", string.Empty, StringComparison.Ordinal);
+        migrationBuilder.Sql(ddl);
     }
 
     protected override void Down(MigrationBuilder migrationBuilder)
