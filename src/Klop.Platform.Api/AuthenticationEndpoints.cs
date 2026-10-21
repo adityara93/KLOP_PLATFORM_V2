@@ -15,15 +15,17 @@ public static class AuthenticationEndpoints
     public static IServiceCollection AddPlatformJwt(this IServiceCollection services, IConfiguration config)
     {
         var jwt=config.GetSection("Jwt").Get<JwtOptions>() ?? throw new InvalidOperationException("JWT configuration required.");
+        var signingKey=jwt.SigningKey;
         if (string.IsNullOrWhiteSpace(jwt.Issuer)||string.IsNullOrWhiteSpace(jwt.Audience)||
-            Encoding.UTF8.GetByteCount(jwt.SigningKey??"")<32) throw new InvalidOperationException("Invalid JWT configuration.");
+            string.IsNullOrWhiteSpace(signingKey)||Encoding.UTF8.GetByteCount(signingKey)<32)
+            throw new InvalidOperationException("Invalid JWT configuration.");
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options=>
         {
             options.MapInboundClaims=false;
             options.TokenValidationParameters=new TokenValidationParameters
             {
                 ValidateIssuer=true,ValidIssuer=jwt.Issuer,ValidateAudience=true,ValidAudience=jwt.Audience,
-                ValidateIssuerSigningKey=true,IssuerSigningKey=new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.SigningKey)),
+                ValidateIssuerSigningKey=true,IssuerSigningKey=new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey)),
                 ValidateLifetime=true,RequireExpirationTime=true,RequireSignedTokens=true,
                 ClockSkew=TimeSpan.FromSeconds(30)
             };
