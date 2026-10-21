@@ -1,2 +1,2 @@
 # KLOP_PLATFORM_V2
-New Architectur
+New Architecture PLATFORM
