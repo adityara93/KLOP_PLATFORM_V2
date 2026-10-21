@@ -78,17 +78,18 @@ UPDATE [identity].[RefreshToken] SET RevokedAt=COALESCE(RevokedAt,@now) WHERE Fa
                 await tx.CommitAsync(cancellationToken);
                 return new RefreshRotationResult(RefreshRotationStatus.Replayed, sessionId, userId);
             }
-            if (tokenRevoked || sessionRevoked || tokenExpiry <= now.UtcDateTime || sessionExpiry <= now.UtcDateTime || replacementExpiry.UtcDateTime > sessionExpiry || replacementExpiry <= now)
+            if (tokenRevoked || sessionRevoked || tokenExpiry <= now.UtcDateTime || sessionExpiry <= now.UtcDateTime || replacementExpiry <= now)
             {
                 await tx.CommitAsync(cancellationToken);
                 return new RefreshRotationResult(RefreshRotationStatus.Invalid, null, null);
             }
+            var effectiveExpiry = replacementExpiry.UtcDateTime < sessionExpiry ? replacementExpiry : new DateTimeOffset(sessionExpiry); 
             await using var insert = new SqlCommand(@"INSERT INTO [identity].[RefreshToken](SessionId,TokenHash,FamilyId,ExpiresAt)
 OUTPUT INSERTED.RefreshTokenId VALUES(@sid,@newhash,@family,@expiry);", connection, tx);
             insert.Parameters.Add("@sid", SqlDbType.UniqueIdentifier).Value = sessionId;
             insert.Parameters.Add("@newhash", SqlDbType.VarBinary, 32).Value = replacementTokenHash;
             insert.Parameters.Add("@family", SqlDbType.UniqueIdentifier).Value = familyId;
-            insert.Parameters.Add("@expiry", SqlDbType.DateTime2).Value = replacementExpiry.UtcDateTime;
+            insert.Parameters.Add("@expiry", SqlDbType.DateTime2).Value = effectiveExpiry.UtcDateTime;
             var newId = (long)(await insert.ExecuteScalarAsync(cancellationToken) ?? throw new InvalidOperationException("Missing token id."));
             await using var update = new SqlCommand(@"UPDATE [identity].[RefreshToken] SET UsedAt=@now,ReplacedByTokenId=@newId
 WHERE RefreshTokenId=@oldId AND UsedAt IS NULL;", connection, tx);
@@ -97,7 +98,7 @@ WHERE RefreshTokenId=@oldId AND UsedAt IS NULL;", connection, tx);
             update.Parameters.Add("@oldId", SqlDbType.BigInt).Value = tokenId;
             if (await update.ExecuteNonQueryAsync(cancellationToken) != 1) throw new DBConcurrencyException("Refresh token rotation conflict.");
             await tx.CommitAsync(cancellationToken);
-            return new RefreshRotationResult(RefreshRotationStatus.Success, sessionId, userId);
+            return new RefreshRotationResult(RefreshRotationStatus.Success, sessionId, userId, effectiveExpiry);
         }
         catch { await tx.RollbackAsync(CancellationToken.None); throw; }
     }
